@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - ThinkCyber Store{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <a href="{{ url_for('index') }}" class="text-xs text-[#96CFF1] hover:text-white transition flex items-center gap-1">
+        ← Back to Catalog
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-10 bg-[#0E1F36] border border-[#163C6D] rounded-2xl p-6 sm:p-8 mb-12 shadow-lg shadow-[#001120]/40">
+    <!-- Product Image -->
+    <div class="rounded-xl overflow-hidden bg-[#031934] border border-[#163C6D] aspect-video lg:aspect-square flex items-center justify-center">
+        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+    </div>
+
+    <!-- Product Info -->
+    <div class="flex flex-col justify-between">
+        <div>
+            <div class="flex items-center gap-2 mb-2">
+                <span
+                    class="text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#ACE3FA]/15 text-[#ACE3FA] border border-[#ACE3FA]/40">
+                    {{ product.category }}
+                </span>
+                <span class="text-xs text-[#96CFF1]">Stock: {{ product.stock }} units</span>
+            </div>
+
+            <h1 class="text-2xl sm:text-3xl font-bold text-white mb-3">
+                {{ product.name }}
+            </h1>
+
+            <div class="flex items-center gap-2 mb-6">
+                <div class="flex text-[#fec42d] text-sm">
+                    {% for _ in range(5) %}★{% endfor %}
+                </div>
+                <span class="text-xs text-[#96CFF1]">
+                    {% if avg_rating > 0 %}{{ avg_rating }} / 5.0 ({{ reviews|length }} reviews){% else %}No reviews
+                    yet{% endif %}
+                </span>
+            </div>
+
+            <div class="text-3xl font-extrabold text-[#ACE3FA] mb-6">
+                ${{ "%.2f"|format(product.price) }}
+            </div>
+
+            <div class="prose prose-invert max-w-none text-[#C0E8FF] text-sm leading-relaxed mb-8">
+                <p>{{ product.description }}</p>
+            </div>
+        </div>
+
+        <!-- Add to Cart Form -->
+        <form action="{{ url_for('add_to_cart') }}" method="POST"
+            class="pt-6 border-t border-[#163C6D] flex items-center gap-4">
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+            <div class="w-24">
+                <label for="quantity" class="sr-only">Quantity</label>
+                <input type="number" id="quantity" name="quantity" min="1" max="{{ product.stock }}" value="1"
+                    class="w-full bg-[#031934] border border-[#163C6D] rounded-full px-3 py-2 text-sm text-center text-white focus:outline-none focus:border-[#ACE3FA]">
+            </div>
+            <button type="submit"
+                class="flex-1 bg-[#ACE3FA] hover:bg-transparent text-[#091650] hover:text-white border border-[#ACE3FA] font-bold uppercase tracking-wider py-2.5 px-6 rounded-full text-sm transition">
+                Add to Shopping Cart
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Customer Reviews Section -->
+<div class="bg-[#0E1F36] border border-[#163C6D] rounded-2xl p-6 sm:p-8 shadow-lg shadow-[#001120]/40">
+    <div class="flex items-center justify-between mb-8 pb-4 border-b border-[#163C6D]">
+        <div>
+            <h2 class="text-xl font-bold text-white">Customer Reviews</h2>
+            <p class="text-xs text-[#96CFF1] mt-1">Verified purchaser feedback and ratings</p>
+        </div>
+        <span class="text-sm font-semibold text-[#C0E8FF]">
+            Total Reviews: {{ reviews|length }}
+        </span>
+    </div>
+
+    <!-- Add Review Form -->
+    {% if current_user %}
+    <div class="bg-[#031934] border border-[#163C6D] rounded-xl p-5 mb-8">
+        <h3 class="text-sm font-semibold text-white mb-3">Leave a Review</h3>
+        <form action="{{ url_for('add_review', product_id=product.id) }}" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-medium text-[#96CFF1] mb-1">Rating</label>
+                <select name="rating"
+                    class="bg-[#0E1F36] border border-[#163C6D] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#ACE3FA]">
+                    <option value="5">★★★★★ - Excellent (5 Stars)</option>
+                    <option value="4">★★★★☆ - Very Good (4 Stars)</option>
+                    <option value="3">★★★☆☆ - Average (3 Stars)</option>
+                    <option value="2">★★☆☆☆ - Poor (2 Stars)</option>
+                    <option value="1">★☆☆☆☆ - Terrible (1 Star)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-[#96CFF1] mb-1">Your Review</label>
+                <textarea name="comment" rows="3" required placeholder="Share your experience with this equipment..."
+                    class="w-full bg-[#0E1F36] border border-[#163C6D] rounded-lg p-3 text-xs text-white placeholder-[#5AA3CC]/70 focus:outline-none focus:border-[#ACE3FA]"></textarea>
+            </div>
+            <button type="submit"
+                class="bg-[#163C6D] hover:bg-[#5AA3CC] text-white hover:text-[#091650] font-semibold uppercase tracking-wider px-5 py-2 rounded-full text-xs border border-[#5AA3CC]/60 transition">
+                Submit Review
+            </button>
+        </form>
+    </div>
+    {% else %}
+    <div class="bg-[#031934]/80 border border-[#163C6D] rounded-xl p-4 mb-8 text-center text-xs text-[#96CFF1]">
+        Please <a href="{{ url_for('login', next=request.path) }}"
+            class="text-[#ACE3FA] font-semibold hover:underline">sign in</a> to submit a product review.
+    </div>
+    {% endif %}
+
+    <!-- Reviews List -->
+    {% if reviews %}
+    <div class="space-y-4">
+        {% for review in reviews %}
+        <div class="p-4 rounded-xl bg-[#031934] border border-[#163C6D]">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs font-bold text-white">{{ review.full_name }}</span>
+                    <span class="text-[11px] text-[#96CFF1]/70">(@{{ review.username }})</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="text-[#fec42d] text-xs">
+                        {% for _ in range(review.rating) %}★{% endfor %}
+                    </div>
+                    <span class="text-[10px] text-[#96CFF1]/70">{{ review.created_at }}</span>
+                </div>
+            </div>
+            <!-- Secure: Jinja2 escapes text by default, preventing execution of injected tags/scripts -->
+            <p class="text-xs text-[#C0E8FF] leading-relaxed whitespace-pre-wrap">{{ review.comment | safe }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-8 text-xs text-[#96CFF1]/70">
+        No reviews for this product yet. Be the first to share your feedback!
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

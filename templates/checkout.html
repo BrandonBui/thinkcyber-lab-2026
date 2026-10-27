@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - ThinkCyber Store{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="mb-6">
+        <a href="{{ url_for('view_cart') }}" class="text-xs text-[#96CFF1] hover:text-white transition flex items-center gap-1">
+            ← Back to Cart
+        </a>
+    </div>
+
+    <h1 class="text-2xl font-bold text-white mb-6">Complete Your Order</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Shipping & Payment Form -->
+        <div class="md:col-span-2">
+            <form action="{{ url_for('checkout') }}" method="POST" class="bg-[#0E1F36] border border-[#163C6D] rounded-xl p-6 space-y-6 shadow-lg shadow-[#001120]/40">
+                <div>
+                    <h2 class="text-sm font-semibold text-white uppercase tracking-wider mb-4 border-b border-[#163C6D] pb-2">
+                        1. Shipping Address
+                    </h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-[#96CFF1] mb-1">Full Name</label>
+                            <input type="text" value="{{ user.full_name }}" disabled
+                                   class="w-full bg-[#031934]/60 border border-[#163C6D] rounded-lg px-3 py-2 text-xs text-[#96CFF1]/70 cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label for="shipping_address" class="block text-xs font-medium text-[#C0E8FF] mb-1">Delivery Address *</label>
+                            <textarea id="shipping_address" name="shipping_address" rows="3" required
+                                      class="w-full bg-[#031934] border border-[#163C6D] rounded-lg p-3 text-xs text-white placeholder-[#5AA3CC]/70 focus:outline-none focus:border-[#ACE3FA]">{{ user.address or '' }}</textarea>
+                            <span class="text-[11px] text-[#96CFF1]/70">Provide street address, city, state, and postal code.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-sm font-semibold text-white uppercase tracking-wider mb-4 border-b border-[#163C6D] pb-2">
+                        2. Payment Method
+                    </h2>
+                    <div class="p-3 bg-[#031934] border border-[#163C6D] rounded-lg flex items-center justify-between text-xs text-[#C0E8FF]">
+                        <div class="flex items-center space-x-2">
+                            <span>💳</span>
+                            <span>Simulation Payment (Pre-Authorized Lab Checkout)</span>
+                        </div>
+                        <span class="text-[#ACE3FA] font-medium">Ready</span>
+                    </div>
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-[#ACE3FA] hover:bg-transparent text-[#091650] hover:text-white border border-[#ACE3FA] font-bold uppercase tracking-wider py-3 px-6 rounded-full text-sm transition">
+                    Confirm &amp; Place Order (${{ "%.2f"|format(total) }})
+                </button>
+            </form>
+        </div>
+
+        <!-- Order Summary Column -->
+        <div class="bg-[#0E1F36] border border-[#163C6D] rounded-xl p-6 h-fit space-y-4 shadow-lg shadow-[#001120]/40">
+            <h2 class="text-sm font-semibold text-white uppercase tracking-wider border-b border-[#163C6D] pb-2">
+                Items ({{ cart_items|length }})
+            </h2>
+
+            <div class="space-y-3 max-h-60 overflow-y-auto pr-1">
+                {% for item in cart_items %}
+                <div class="flex justify-between items-start text-xs">
+                    <div>
+                        <span class="text-white font-medium block">{{ item.product.name }}</span>
+                        <span class="text-[#96CFF1]">Qty: {{ item.quantity }}</span>
+                    </div>
+                    <span class="text-[#C0E8FF] font-semibold">${{ "%.2f"|format(item.line_total) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="border-t border-[#163C6D] pt-3 space-y-2 text-xs">
+                <div class="flex justify-between text-[#96CFF1]">
+                    <span>Subtotal</span>
+                    <span>${{ "%.2f"|format(subtotal) }}</span>
+                </div>
+                {% if discount > 0 %}
+                <div class="flex justify-between text-[#ACE3FA]">
+                    <span>Discount ({{ promo_code }})</span>
+                    <span>-${{ "%.2f"|format(discount) }}</span>
+                </div>
+                {% endif %}
+                <div class="flex justify-between text-[#96CFF1]">
+                    <span>Shipping</span>
+                    <span class="text-[#ACE3FA]">Free</span>
+                </div>
+                <div class="flex justify-between text-sm font-bold text-white border-t border-[#163C6D] pt-2">
+                    <span>Total</span>
+                    <span class="text-[#ACE3FA]">${{ "%.2f"|format(total) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

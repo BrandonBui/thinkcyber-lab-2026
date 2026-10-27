@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - ThinkCyber Store{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-6">
+    <div class="bg-[#0E1F36] border border-[#163C6D] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl shadow-[#001120]/50">
+        <div class="text-center">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="ThinkCyber Foundation" class="h-12 w-auto object-contain mx-auto mb-3">
+            <h1 class="text-2xl font-bold text-white">Sign In</h1>
+            <p class="text-xs text-[#96CFF1] mt-1">Access your ThinkCyber hardware cart and orders</p>
+        </div>
+
+        <form action="{{ url_for('login', next=request.args.get('next')) }}" method="POST" class="space-y-4">
+            <div>
+                <label for="username" class="block text-xs font-medium text-[#C0E8FF] mb-1">Username</label>
+                <input type="text" id="username" name="username" required autofocus
+                       class="w-full bg-[#031934] border border-[#163C6D] rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ACE3FA]">
+            </div>
+
+            <div>
+                <label for="password" class="block text-xs font-medium text-[#C0E8FF] mb-1">Password</label>
+                <input type="password" id="password" name="password" required
+                       class="w-full bg-[#031934] border border-[#163C6D] rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ACE3FA]">
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-[#ACE3FA] hover:bg-transparent text-[#091650] hover:text-white border border-[#ACE3FA] font-bold uppercase tracking-wider py-2.5 px-4 rounded-full text-xs transition">
+                Sign In
+            </button>
+        </form>
+
+        <!-- Test Accounts Helper Box -->
+        <div class="p-3.5 bg-[#031934] border border-[#163C6D] rounded-xl space-y-2 text-xs">
+            <span class="font-semibold text-white block">Pre-Seeded Test Accounts:</span>
+            <div class="space-y-1 text-[#C0E8FF] text-[11px] font-mono">
+                <div><span class="text-[#ACE3FA]">student</span> : student123 (Standard User)</div>
+                <div><span class="text-[#ACE3FA]">victim_user</span> : P@ssword123 (Customer)</div>
+                <div><span class="text-[#ACE3FA]">admin</span> : AdminPass2026! (Administrator)</div>
+            </div>
+        </div>
+
+        <div class="text-center text-xs text-[#96CFF1]">
+            Don't have an account?
+            <a href="{{ url_for('register') }}" class="text-[#ACE3FA] font-semibold hover:underline">
+                Create one now
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

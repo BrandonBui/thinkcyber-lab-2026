@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Order #{{ order.id }} - ThinkCyber Store{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="mb-6 flex items-center justify-between">
+        <a href="{{ url_for('orders_list') }}" class="text-xs text-[#96CFF1] hover:text-white transition flex items-center gap-1">
+            ← Back to Order History
+        </a>
+        <span class="text-xs text-[#96CFF1]/70">Order ID: #{{ order.id }}</span>
+    </div>
+
+    <div class="bg-[#0E1F36] border border-[#163C6D] rounded-2xl p-6 sm:p-8 space-y-8 shadow-lg shadow-[#001120]/40">
+        <!-- Order Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[#163C6D] gap-4">
+            <div>
+                <h1 class="text-xl font-bold text-white flex items-center gap-2">
+                    <span>Order Receipt #{{ order.id }}</span>
+                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-[#ACE3FA]/15 text-[#ACE3FA] border border-[#ACE3FA]/40">
+                        {{ order.status }}
+                    </span>
+                </h1>
+                <p class="text-xs text-[#96CFF1] mt-1">Placed on {{ order.created_at }}</p>
+            </div>
+            <div class="text-sm">
+                <span class="text-[#96CFF1] block text-xs">Customer</span>
+                <span class="text-white font-medium">{{ customer.full_name }} ({{ customer.email }})</span>
+            </div>
+        </div>
+
+        <!-- Shipping Info -->
+        <div class="p-4 rounded-xl bg-[#031934] border border-[#163C6D] text-xs">
+            <span class="text-[#96CFF1] font-semibold uppercase tracking-wider block mb-1">Destination Address</span>
+            <p class="text-[#C0E8FF]">{{ order.shipping_address }}</p>
+        </div>
+
+        <!-- Line Items -->
+        <div>
+            <h2 class="text-sm font-semibold text-white uppercase tracking-wider mb-4">Ordered Items</h2>
+            <div class="space-y-3">
+                {% for item in items %}
+                <div class="flex items-center justify-between p-3 rounded-lg bg-[#031934] border border-[#163C6D] text-xs">
+                    <div>
+                        <span class="text-white font-medium">{{ item.product_name }}</span>
+                        <span class="text-[#96CFF1]/80 block text-[11px]">Quantity: {{ item.quantity }} × ${{ "%.2f"|format(item.unit_price) }}</span>
+                    </div>
+                    <span class="text-[#C0E8FF] font-semibold">${{ "%.2f"|format(item.unit_price * item.quantity) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Totals Breakdown -->
+        <div class="border-t border-[#163C6D] pt-4 space-y-2 text-xs">
+            <div class="flex justify-between text-[#96CFF1]">
+                <span>Subtotal</span>
+                <span>${{ "%.2f"|format(order.subtotal) }}</span>
+            </div>
+            {% if order.discount > 0 %}
+            <div class="flex justify-between text-[#ACE3FA]">
+                <span>Discount applied ({{ order.promo_code }})</span>
+                <span>-${{ "%.2f"|format(order.discount) }}</span>
+            </div>
+            {% endif %}
+            <div class="flex justify-between text-[#96CFF1]">
+                <span>Shipping</span>
+                <span class="text-[#ACE3FA]">Free</span>
+            </div>
+            <div class="flex justify-between text-base font-bold text-white border-t border-[#163C6D] pt-3">
+                <span>Total Paid</span>
+                <span class="text-[#ACE3FA]">${{ "%.2f"|format(order.total) }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

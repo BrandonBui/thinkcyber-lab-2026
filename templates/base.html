@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ThinkCyber Store - Security & Tech Gear{% endblock %}</title>
+    <!-- Google Fonts: Roboto & Oswald -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto+Condensed:wght@400;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'],
+                        heading: ['Oswald', 'Roboto', 'sans-serif'],
+                        condensed: ['"Roboto Condensed"', 'sans-serif'],
+                    },
+                    colors: {
+                        thinkcyber: {
+                            bg: '#031934',
+                            dark: '#050924',
+                            navy: '#091650',
+                            surface: '#0E1F36',
+                            card: '#112D51',
+                            border: '#163C6D',
+                            primary: '#ACE3FA',
+                            secondary: '#96CFF1',
+                            accent: '#5AA3CC',
+                            text: '#C0E8FF',
+                            muted: '#C1CBF3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#031934] text-[#C0E8FF] min-h-screen flex flex-col font-sans antialiased selection:bg-[#ACE3FA] selection:text-[#091650]">
+    <!-- Navigation Bar -->
+    <header class="border-b border-[#3393DC]/30 bg-gradient-to-r from-[#0F3059]/95 to-[#050924]/95 backdrop-blur sticky top-0 z-50 shadow-lg shadow-[#001120]/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Brand Logo -->
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('index') }}" class="flex items-center space-x-3 group transition">
+                        <img src="{{ url_for('static', filename='logo.png') }}" alt="ThinkCyber Foundation" class="h-11 w-auto object-contain">
+                    </a>
+                    <span class="hidden sm:inline-block text-[11px] font-semibold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-[#112D51] text-[#ACE3FA] border border-[#5AA3CC]/40">
+                        Lab Store
+                    </span>
+                </div>
+
+                <!-- Center Nav Links -->
+                <nav class="hidden md:flex items-center space-x-7 text-sm font-medium">
+                    <a href="{{ url_for('index') }}" class="text-white hover:text-[#ACE3FA] transition">All Gear</a>
+                    {% for cat in categories %}
+                    <a href="{{ url_for('index', category=cat) }}" class="text-[#C0E8FF] hover:text-[#ACE3FA] transition">
+                        {{ cat }}
+                    </a>
+                    {% endfor %}
+                </nav>
+
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- Cart Link -->
+                    <a href="{{ url_for('view_cart') }}" class="relative p-2 text-[#C0E8FF] hover:text-[#ACE3FA] transition" title="Shopping Cart">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        {% if cart_count > 0 %}
+                        <span class="absolute top-1 right-1 bg-[#ACE3FA] text-[#091650] font-bold text-xs rounded-full h-5 w-5 flex items-center justify-center shadow">
+                            {{ cart_count }}
+                        </span>
+                        {% endif %}
+                    </a>
+
+                    <!-- Auth Links -->
+                    {% if current_user %}
+                    <div class="relative flex items-center space-x-3 text-sm">
+                        <a href="{{ url_for('profile', id=current_user.id) }}" class="flex items-center space-x-2 text-white hover:text-[#ACE3FA] transition font-medium">
+                            <div class="w-7 h-7 rounded-full bg-[#5AA3CC]/25 text-[#ACE3FA] flex items-center justify-center text-xs font-bold border border-[#ACE3FA]/50">
+                                {{ current_user.username[0]|upper }}
+                            </div>
+                            <span class="hidden sm:inline">{{ current_user.username }}</span>
+                            {% if current_user.role == 'admin' %}
+                            <span class="text-xs bg-red-500/20 text-red-300 px-1.5 py-0.5 rounded border border-red-500/40">admin</span>
+                            {% endif %}
+                        </a>
+                        <a href="{{ url_for('orders_list') }}" class="text-xs text-[#96CFF1] hover:text-white transition">Orders</a>
+                        <a href="{{ url_for('logout') }}" class="text-xs text-red-400 hover:text-red-300 transition">Logout</a>
+                    </div>
+                    {% else %}
+                    <div class="flex items-center space-x-3 text-sm">
+                        <a href="{{ url_for('login') }}" class="text-[#C0E8FF] hover:text-white transition font-medium">Sign In</a>
+                        <a href="{{ url_for('register') }}" class="bg-[#ACE3FA] hover:bg-transparent text-[#091650] hover:text-white border border-[#ACE3FA] font-bold uppercase tracking-wider px-4 py-1.5 rounded-full transition text-xs">
+                            Register
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Flash Messages Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 w-full">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="space-y-2">
+            {% for category, message in messages %}
+                {% set alert_classes = "bg-[#0E1F36] text-[#C0E8FF] border-[#163C6D]" %}
+                {% if category == "error" %}
+                    {% set alert_classes = "bg-red-950/80 text-red-200 border-red-800/80" %}
+                {% elif category == "success" %}
+                    {% set alert_classes = "bg-[#0F3059]/90 text-[#ACE3FA] border-[#5AA3CC]/60" %}
+                {% elif category == "warning" %}
+                    {% set alert_classes = "bg-amber-950/80 text-amber-200 border-amber-800/80" %}
+                {% elif category == "info" %}
+                    {% set alert_classes = "bg-[#112D51]/90 text-[#D7F0FA] border-[#5AA3CC]/60" %}
+                {% endif %}
+                <div class="p-3 text-sm rounded-xl border {{ alert_classes }} flex items-center justify-between shadow-sm">
+                    <span>{{ message }}</span>
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-[#3393DC]/30 bg-[#041A30] mt-auto py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-[#96CFF1]">
+            <div class="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="ThinkCyber Foundation" class="h-9 w-auto object-contain">
+                <div>
+                    <p class="font-medium text-white">ThinkCyber Foundation — Security &amp; Privacy Hardware Lab</p>
+                    <p class="text-xs mt-0.5 text-[#96CFF1]/80">A 501(c)(3) nonprofit dedicated to demystifying cybersecurity through education, knowledge, and innovation.</p>
+                </div>
+            </div>
+            <div class="text-xs text-[#96CFF1]/70 text-center sm:text-right">
+                <p>ThinkCyber Copyright &copy; 2026. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

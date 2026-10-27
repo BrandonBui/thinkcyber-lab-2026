@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: cybermart_app
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=cybermart-lab-session-secret-key-2026
+      - EVENT_PASSWORD=THINKCYBERDAY2026!
+      - DATABASE_PATH=/app/data/cybermart.db
+    volumes:
+      - cybermart_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  cybermart_data:

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - ThinkCyber Store{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-white">Account Profile</h1>
+            <p class="text-xs text-[#96CFF1] mt-1">Manage personal contact details and review account activity.</p>
+        </div>
+        <span class="text-xs px-3.5 py-1 rounded-full bg-[#112D51] text-[#ACE3FA] border border-[#163C6D] font-semibold">
+            User ID: #{{ user.id }}
+        </span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Profile Form -->
+        <div class="md:col-span-2 bg-[#0E1F36] border border-[#163C6D] rounded-xl p-6 shadow-lg shadow-[#001120]/40">
+            <h2 class="text-sm font-semibold text-white uppercase tracking-wider mb-4 border-b border-[#163C6D] pb-2">
+                Personal Information
+            </h2>
+
+            <form action="{{ url_for('profile', id=user.id) }}" method="POST" class="space-y-4">
+                <input type="hidden" name="id" value="{{ user.id }}">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-[#96CFF1] mb-1">Username</label>
+                        <input type="text" value="{{ user.username }}" disabled
+                               class="w-full bg-[#031934]/60 border border-[#163C6D] rounded-lg px-3 py-2 text-xs text-[#96CFF1]/70 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-[#96CFF1] mb-1">Account Role</label>
+                        <input type="text" value="{{ user.role }}" disabled
+                               class="w-full bg-[#031934]/60 border border-[#163C6D] rounded-lg px-3 py-2 text-xs text-[#96CFF1]/70 cursor-not-allowed uppercase font-semibold">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="full_name" class="block text-xs font-medium text-[#C0E8FF] mb-1">Full Name *</label>
+                    <input type="text" id="full_name" name="full_name" value="{{ user.full_name }}" required
+                           class="w-full bg-[#031934] border border-[#163C6D] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#ACE3FA]">
+                </div>
+
+                <div>
+                    <label for="email" class="block text-xs font-medium text-[#C0E8FF] mb-1">Email Address *</label>
+                    <input type="email" id="email" name="email" value="{{ user.email }}" required
+                           class="w-full bg-[#031934] border border-[#163C6D] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#ACE3FA]">
+                </div>
+
+                <div>
+                    <label for="phone" class="block text-xs font-medium text-[#C0E8FF] mb-1">Phone Number</label>
+                    <input type="text" id="phone" name="phone" value="{{ user.phone or '' }}" placeholder="+1 (555) 000-0000"
+                           class="w-full bg-[#031934] border border-[#163C6D] rounded-lg px-3 py-2 text-xs text-white placeholder-[#5AA3CC]/70 focus:outline-none focus:border-[#ACE3FA]">
+                </div>
+
+                <div>
+                    <label for="address" class="block text-xs font-medium text-[#C0E8FF] mb-1">Default Shipping Address</label>
+                    <textarea id="address" name="address" rows="3"
+                              class="w-full bg-[#031934] border border-[#163C6D] rounded-lg p-3 text-xs text-white placeholder-[#5AA3CC]/70 focus:outline-none focus:border-[#ACE3FA]">{{ user.address or '' }}</textarea>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit"
+                            class="bg-[#ACE3FA] hover:bg-transparent text-[#091650] hover:text-white border border-[#ACE3FA] font-bold uppercase tracking-wider px-6 py-2.5 rounded-full text-xs transition">
+                        Save Profile Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Account Summary & Recent Orders -->
+        <div class="space-y-6">
+            <div class="bg-[#0E1F36] border border-[#163C6D] rounded-xl p-5 space-y-3 shadow-lg shadow-[#001120]/40">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-[#ACE3FA]">Account Security</h3>
+                <div class="text-xs text-[#C0E8FF] space-y-1.5">
+                    <p><span class="text-[#96CFF1]/70">Registered:</span> {{ user.created_at }}</p>
+                    <p><span class="text-[#96CFF1]/70">Password:</span> Encrypted (Werkzeug PBKDF2/scrypt)</p>
+                    <p><span class="text-[#96CFF1]/70">Access Level:</span> {{ user.role }}</p>
+                </div>
+            </div>
+
+            <div class="bg-[#0E1F36] border border-[#163C6D] rounded-xl p-5 shadow-lg shadow-[#001120]/40">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-[#ACE3FA] mb-3">Recent Orders</h3>
+                {% if recent_orders %}
+                <div class="space-y-3">
+                    {% for order in recent_orders %}
+                    <div class="flex items-center justify-between text-xs p-2.5 rounded-lg bg-[#031934] border border-[#163C6D]">
+                        <div>
+                            <span class="font-bold text-white">#{{ order.id }}</span>
+                            <span class="text-[10px] text-[#96CFF1]/70 block">{{ order.created_at[:10] }}</span>
+                        </div>
+                        <a href="{{ url_for('order_detail', order_id=order.id) }}" class="text-[#ACE3FA] font-semibold hover:underline">
+                            ${{ "%.2f"|format(order.total) }} →
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-xs text-[#96CFF1]/70">No orders placed yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

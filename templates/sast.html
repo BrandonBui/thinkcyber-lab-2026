@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThinkCyber CodeGuard (SAST) — Application Security Posture</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        codeguard: {
+                            bg: '#050924',
+                            surface: '#0E1F36',
+                            card: '#112D51',
+                            border: '#163C6D',
+                            accent: '#ACE3FA',
+                            secondary: '#96CFF1',
+                            text: '#C0E8FF',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050924;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #163C6D;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3393DC;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            max-inline-size: 100%;
+            container-type: inline-size;
+        }
+        thead {
+            position: sticky;
+            inset-block-start: 0;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-[#050924] text-[#C0E8FF] min-h-screen flex flex-col font-sans antialiased selection:bg-[#ACE3FA] selection:text-[#050924]">
+
+    <!-- Top Application Bar -->
+    <header class="border-b border-[#163C6D] bg-[#0E1F36]/95 backdrop-blur sticky top-0 z-40 shadow-lg shadow-black/40">
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between py-3.5 gap-3">
+                <!-- Left: Brand & Repository Metadata Pill -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <a href="{{ url_for('sast_dashboard') }}" class="flex items-center gap-3 group">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#112D51] to-[#050924] border border-[#ACE3FA]/50 flex items-center justify-center text-[#ACE3FA] shadow-inner group-hover:border-[#ACE3FA] transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-base font-extrabold tracking-tight text-white">ThinkCyber CodeGuard</span>
+                                <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#112D51] text-[#ACE3FA] border border-[#ACE3FA]/40">SAST</span>
+                            </div>
+                            <p class="text-xs text-[#96CFF1]/80">Static Application Security Testing &amp; Source-to-Sink Code Analysis</p>
+                        </div>
+                    </a>
+
+                    <div class="hidden xl:block h-6 w-px bg-[#163C6D] mx-1"></div>
+
+                    <!-- Repository Metadata Pill -->
+                    <div class="flex flex-wrap items-center gap-2 bg-[#050924] border border-[#163C6D] rounded-xl px-3 py-1.5 text-xs font-mono">
+                        <span class="flex items-center gap-1.5 text-[#C0E8FF]">
+                            <svg class="w-3.5 h-3.5 text-[#ACE3FA]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                            </svg>
+                            <span class="text-[#96CFF1]/70">repo:</span>
+                            <strong class="text-white">{{ stats.repo }}</strong>
+                        </span>
+                        <span class="text-[#163C6D]">|</span>
+                        <span class="flex items-center gap-1 text-[#C0E8FF]">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            <span class="text-[#96CFF1]/70">Branch:</span>
+                            <strong class="text-white">{{ stats.branch }}</strong>
+                        </span>
+                        <span class="text-[#163C6D]">|</span>
+                        <span class="text-[#ACE3FA]">
+                            <span class="text-[#96CFF1]/70">Commit:</span>
+                            <strong>{{ stats.commit }}</strong>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Right: Scan Status & Re-run SAST Scan Button -->
+                <div class="flex items-center gap-3 self-start md:self-auto">
+                    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#050924] border border-[#163C6D] text-xs text-[#96CFF1]">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>Last scan: <strong id="last-scan-time" class="text-white">Just now</strong></span>
+                    </div>
+                    <button id="rescan-btn" onclick="triggerScan()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#ACE3FA] text-[#050924] hover:bg-white transition shadow-md shadow-[#ACE3FA]/10 cursor-pointer">
+                        <svg id="rescan-spinner" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        <span id="rescan-text">Re-run SAST Scan</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Content -->
+    <main class="flex-grow max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full space-y-6">
+
+        <!-- Simulated Scan Progress Banner (Hidden until triggered) -->
+        <div id="scan-progress-container" class="hidden rounded-2xl p-4 bg-[#0E1F36] border border-[#ACE3FA]/60 shadow-xl">
+            <div class="flex items-center justify-between text-xs font-mono text-[#ACE3FA] mb-2">
+                <span class="flex items-center gap-2 font-semibold">
+                    <svg class="w-4 h-4 animate-spin text-[#ACE3FA]" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span id="scan-stage">Initializing AST parser and taint analysis engine...</span>
+                </span>
+                <span id="scan-pct" class="font-bold">0%</span>
+            </div>
+            <div class="w-full bg-[#050924] rounded-full h-2.5 overflow-hidden border border-[#163C6D]">
+                <div id="scan-bar" class="bg-gradient-to-r from-[#5AA3CC] via-[#ACE3FA] to-white h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- 1. KPI Summary Cards Row -->
+        <section aria-label="Security Posture Summary" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+            <!-- Security Posture Score -->
+            <div class="p-4 rounded-2xl bg-[#0E1F36] border border-[#163C6D] flex flex-col justify-between shadow-md">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-[#96CFF1]">Posture Score</span>
+                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40">{{ stats.rating }}</span>
+                </div>
+                <div class="flex items-baseline gap-1.5 my-2">
+                    <span class="text-3xl font-extrabold text-white">{{ stats.score }}</span>
+                    <span class="text-sm text-[#96CFF1]/70 font-medium">/ 100</span>
+                </div>
+                <div class="w-full bg-[#050924] h-1.5 rounded-full overflow-hidden border border-[#163C6D]">
+                    <div class="bg-amber-400 h-full rounded-full" style="width: {{ stats.score }}%"></div>
+                </div>
+            </div>
+
+            <!-- Total Findings -->
+            <button type="button" onclick="setFilter('severity', 'ALL')" class="text-left p-4 rounded-2xl bg-[#0E1F36] hover:bg-[#112D51] border border-[#163C6D] hover:border-[#ACE3FA]/60 transition flex flex-col justify-between shadow-md cursor-pointer group">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-[#96CFF1] group-hover:text-white">Total Findings</span>
+                    <span class="text-[11px] font-mono text-[#ACE3FA]">View All</span>
+                </div>
+                <div class="text-3xl font-extrabold text-white my-1.5">{{ stats.total }}</div>
+                <div class="text-xs text-[#96CFF1]/70">Active in repository</div>
+            </button>
+
+            <!-- Critical -->
+            <button type="button" onclick="setFilter('severity', 'CRITICAL')" class="text-left p-4 rounded-2xl bg-[#0E1F36] hover:bg-[#112D51] border border-red-500/40 bg-gradient-to-b from-red-500/10 to-transparent transition flex flex-col justify-between shadow-md cursor-pointer">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-red-400">Critical</span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shadow-red-500"></span>
+                </div>
+                <div class="text-3xl font-extrabold text-red-400 my-1.5">{{ stats.critical }}</div>
+                <div class="text-xs text-red-300/80">CVSS 9.0 – 10.0</div>
+            </button>
+
+            <!-- High -->
+            <button type="button" onclick="setFilter('severity', 'HIGH')" class="text-left p-4 rounded-2xl bg-[#0E1F36] hover:bg-[#112D51] border border-orange-500/40 bg-gradient-to-b from-orange-500/10 to-transparent transition flex flex-col justify-between shadow-md cursor-pointer">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-orange-400">High</span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
+                </div>
+                <div class="text-3xl font-extrabold text-orange-400 my-1.5">{{ stats.high }}</div>
+                <div class="text-xs text-orange-300/80">CVSS 7.0 – 8.9</div>
+            </button>
+
+            <!-- Medium -->
+            <button type="button" onclick="setFilter('severity', 'MEDIUM')" class="text-left p-4 rounded-2xl bg-[#0E1F36] hover:bg-[#112D51] border border-amber-500/40 bg-gradient-to-b from-amber-500/10 to-transparent transition flex flex-col justify-between shadow-md cursor-pointer">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-300">Medium</span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                </div>
+                <div class="text-3xl font-extrabold text-amber-300 my-1.5">{{ stats.medium }}</div>
+                <div class="text-xs text-amber-200/80">CVSS 4.0 – 6.9</div>
+            </button>
+
+            <!-- Low -->
+            <button type="button" onclick="setFilter('severity', 'LOW')" class="text-left p-4 rounded-2xl bg-[#0E1F36] hover:bg-[#112D51] border border-sky-500/40 bg-gradient-to-b from-sky-500/10 to-transparent transition flex flex-col justify-between shadow-md cursor-pointer">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-300">Low</span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+                </div>
+                <div class="text-3xl font-extrabold text-sky-300 my-1.5">{{ stats.low }}</div>
+                <div class="text-xs text-sky-200/80">CVSS 0.1 – 3.9</div>
+            </button>
+        </section>
+
+        <!-- 2. Filter & Search Bar + Prioritized Findings Table -->
+        <section class="rounded-2xl bg-[#0E1F36] border border-[#163C6D] shadow-xl overflow-hidden">
+            <!-- Filter Bar Header -->
+            <div class="p-4 bg-[#112D51]/60 border-b border-[#163C6D] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <!-- Left: Severity Filter Pills -->
+                <div class="flex items-center gap-2 flex-wrap" id="severity-pills">
+                    <span class="text-xs font-bold uppercase tracking-wider text-[#96CFF1] mr-1">Filter Severity:</span>
+                    <button type="button" onclick="setFilter('severity', 'ALL')" data-severity="ALL" class="filter-pill px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition border bg-[#ACE3FA] text-[#050924] border-[#ACE3FA] cursor-pointer">
+                        All ({{ stats.total }})
+                    </button>
+                    <button type="button" onclick="setFilter('severity', 'CRITICAL')" data-severity="CRITICAL" class="filter-pill px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition border bg-[#050924] text-red-400 border-red-500/40 hover:bg-red-500/20 cursor-pointer">
+                        Critical ({{ stats.critical }})
+                    </button>
+                    <button type="button" onclick="setFilter('severity', 'HIGH')" data-severity="HIGH" class="filter-pill px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition border bg-[#050924] text-orange-400 border-orange-500/40 hover:bg-orange-500/20 cursor-pointer">
+                        High ({{ stats.high }})
+                    </button>
+                    <button type="button" onclick="setFilter('severity', 'MEDIUM')" data-severity="MEDIUM" class="filter-pill px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition border bg-[#050924] text-amber-300 border-amber-500/40 hover:bg-amber-500/20 cursor-pointer">
+                        Medium ({{ stats.medium }})
+                    </button>
+                    <button type="button" onclick="setFilter('severity', 'LOW')" data-severity="LOW" class="filter-pill px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition border bg-[#050924] text-sky-300 border-sky-500/40 hover:bg-sky-500/20 cursor-pointer">
+                        Low ({{ stats.low }})
+                    </button>
+                </div>
+
+                <!-- Right: File Filter & Search Input -->
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <label for="file-filter" class="sr-only">Filter by File</label>
+                    <select id="file-filter" onchange="setFilter('file', this.value)" class="bg-[#050924] text-xs font-mono text-[#C0E8FF] border border-[#163C6D] rounded-xl px-3 py-2 focus:outline-none focus:border-[#ACE3FA]">
+                        <option value="ALL">All Files ({{ stats.files|length }})</option>
+                        {% for fpath in stats.files %}
+                        <option value="{{ fpath }}">{{ fpath }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <div class="relative flex-grow sm:flex-grow-0 sm:w-72">
+                        <svg class="w-4 h-4 text-[#96CFF1]/60 absolute left-3.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        <input id="search-input" oninput="setFilter('keyword', this.value)" type="text" placeholder="Search CWE, OWASP, title, or route..." class="w-full bg-[#050924] text-xs text-white placeholder-[#96CFF1]/50 border border-[#163C6D] rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:border-[#ACE3FA]">
+                    </div>
+
+                    <button id="reset-filters-btn" type="button" onclick="resetFilters()" class="hidden px-3 py-2 rounded-xl text-xs font-semibold text-[#ACE3FA] bg-[#050924] border border-[#163C6D] hover:border-[#ACE3FA] transition cursor-pointer">
+                        Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sub-bar with table instructions -->
+            <div class="px-5 py-3 bg-[#050924]/50 border-b border-[#163C6D] flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-white uppercase tracking-wider">Prioritized Vulnerability Findings</span>
+                    <span id="findings-count-badge" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#112D51] text-[#ACE3FA] border border-[#ACE3FA]/30">{{ stats.total }} of {{ stats.total }} shown</span>
+                </div>
+                <span class="text-[#96CFF1]/80 hidden sm:inline">Click any vulnerability row to open its dedicated Finding Inspector page</span>
+            </div>
+
+            <!-- Findings Table -->
+            <div class="table-wrapper">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-[#163C6D] bg-[#050924] text-[11px] font-bold uppercase tracking-wider text-[#96CFF1]">
+                            <th class="py-3.5 px-4">Finding ID</th>
+                            <th class="py-3.5 px-3">Severity</th>
+                            <th class="py-3.5 px-4 min-w-[230px]">Vulnerability Title</th>
+                            <th class="py-3.5 px-3">Category / CWE</th>
+                            <th class="py-3.5 px-3">File &amp; Line</th>
+                            <th class="py-3.5 px-3">Route / Endpoint</th>
+                            <th class="py-3.5 px-4 text-right">Status &amp; Inspector</th>
+                        </tr>
+                    </thead>
+                    <tbody id="findings-table-body" class="divide-y divide-[#163C6D]/70 text-xs">
+                        {% for f in findings %}
+                        <tr id="row-{{ f.id }}"
+                            data-id="{{ f.id }}"
+                            data-severity="{{ f.severity }}"
+                            data-file="{{ f.file }}"
+                            data-search="{{ (f.id ~ ' ' ~ f.title ~ ' ' ~ f.category ~ ' ' ~ f.cwe ~ ' ' ~ f.owasp ~ ' ' ~ f.file ~ ' ' ~ f.endpoint ~ ' ' ~ f.summary) | lower }}"
+                            onclick="window.location.href='{{ url_for('sast_finding_detail', finding_id=f.id) }}'"
+                            class="finding-row cursor-pointer transition hover:bg-[#112D51]/80 border-l-4 border-l-transparent hover:border-l-[#ACE3FA] group">
+                            <!-- ID -->
+                            <td class="py-4 px-4 font-mono text-xs font-bold text-[#ACE3FA] whitespace-nowrap">
+                                <a href="{{ url_for('sast_finding_detail', finding_id=f.id) }}" class="hover:underline">{{ f.id }}</a>
+                            </td>
+                            <!-- Severity -->
+                            <td class="py-4 px-3 whitespace-nowrap">
+                                {% if f.severity == 'CRITICAL' %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-extrabold uppercase bg-red-500/20 text-red-400 border border-red-500/40">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                                    CRITICAL
+                                    <span class="text-[10px] font-mono opacity-80">{{ f.cvss }}</span>
+                                </span>
+                                {% elif f.severity == 'HIGH' %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-extrabold uppercase bg-orange-500/20 text-orange-400 border border-orange-500/40">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
+                                    HIGH
+                                    <span class="text-[10px] font-mono opacity-80">{{ f.cvss }}</span>
+                                </span>
+                                {% elif f.severity == 'MEDIUM' %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-300"></span>
+                                    MEDIUM
+                                    <span class="text-[10px] font-mono opacity-80">{{ f.cvss }}</span>
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-extrabold uppercase bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-sky-300"></span>
+                                    LOW
+                                    <span class="text-[10px] font-mono opacity-80">{{ f.cvss }}</span>
+                                </span>
+                                {% endif %}
+                            </td>
+                            <!-- Title -->
+                            <td class="py-4 px-4">
+                                <div class="font-bold text-white text-sm group-hover:text-[#ACE3FA] transition leading-snug">{{ f.title }}</div>
+                                <div class="text-xs text-[#96CFF1]/75 line-clamp-1 mt-1">{{ f.summary }}</div>
+                            </td>
+                            <!-- Category / CWE -->
+                            <td class="py-4 px-3">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-mono text-[11px] font-bold px-1.5 py-0.5 rounded bg-[#050924] text-[#ACE3FA] border border-[#163C6D] shrink-0">{{ f.cwe }}</span>
+                                    <span class="text-xs text-[#C0E8FF] font-medium">{{ f.category }}</span>
+                                </div>
+                                <div class="text-[11px] text-[#96CFF1]/70 font-mono mt-0.5">{{ f.owasp }}</div>
+                            </td>
+                            <!-- File & Line -->
+                            <td class="py-4 px-3 font-mono text-xs whitespace-nowrap">
+                                <div class="text-white font-semibold">{{ f.file }}</div>
+                                <div class="text-[11px] text-[#ACE3FA]/80">Lines {{ f.lines }}</div>
+                            </td>
+                            <!-- Route / Endpoint -->
+                            <td class="py-4 px-3 font-mono text-[11px] text-[#96CFF1]">
+                                <span class="inline-block px-2 py-0.5 rounded bg-[#050924] border border-[#163C6D] text-[#C0E8FF]">{{ f.endpoint }}</span>
+                            </td>
+                            <!-- Status & Action Link -->
+                            <td class="py-4 px-4 text-right whitespace-nowrap">
+                                <div class="inline-flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/30">
+                                        {{ f.status }}
+                                    </span>
+                                    <a href="{{ url_for('sast_finding_detail', finding_id=f.id) }}"
+                                       onclick="event.stopPropagation()"
+                                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#050924] text-[#ACE3FA] border border-[#163C6D] group-hover:bg-[#ACE3FA] group-hover:text-[#050924] group-hover:border-[#ACE3FA] transition">
+                                        Inspect &rarr;
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State when no filter matches -->
+            <div id="empty-state" class="hidden py-12 text-center">
+                <p class="text-base font-bold text-white">No vulnerabilities match your current filter</p>
+                <p class="text-xs text-[#96CFF1]/80 mt-1">Try selecting a different severity pill or clearing the search box.</p>
+                <button type="button" onclick="resetFilters()" class="mt-4 px-4 py-2 rounded-xl text-xs font-bold bg-[#ACE3FA] text-[#050924] hover:bg-white transition cursor-pointer">
+                    Show All {{ stats.total }} Findings
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Standalone Footer -->
+    <footer class="border-t border-[#163C6D] bg-[#030718] mt-auto py-6">
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#96CFF1]/70">
+            <div class="flex items-center gap-2.5">
+                <span class="px-2 py-0.5 rounded bg-[#112D51] text-[#ACE3FA] font-mono font-bold border border-[#ACE3FA]/30">CodeGuard</span>
+                <span>ThinkCyber Static Application Security Testing Lab Console &bull; Engine {{ stats.scanner_version }}</span>
+            </div>
+            <div class="flex items-center gap-4 font-mono text-[11px] text-[#96CFF1]/60">
+                <span>OWASP Top 10 (2021)</span>
+                <span>&bull;</span>
+                <span>MITRE CWE</span>
+                <span>&bull;</span>
+                <span>Deterministic Lab Dataset</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Client-Side Filtering & Simulated Scan Script -->
+    <script>
+        const TOTAL_FINDINGS = {{ stats.total }};
+        let currentFilter = {
+            severity: "ALL",
+            file: "ALL",
+            keyword: ""
+        };
+
+        function applyFilters() {
+            const rows = document.querySelectorAll(".finding-row");
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const sev = row.getAttribute("data-severity");
+                const file = row.getAttribute("data-file");
+                const search = row.getAttribute("data-search") || "";
+
+                let match = true;
+                if (currentFilter.severity !== "ALL" && sev !== currentFilter.severity) match = false;
+                if (currentFilter.file !== "ALL" && file !== currentFilter.file) match = false;
+                if (currentFilter.keyword && !search.includes(currentFilter.keyword.toLowerCase())) match = false;
+
+                if (match) {
+                    row.classList.remove("hidden");
+                    visibleCount++;
+                } else {
+                    row.classList.add("hidden");
+                }
+            });
+
+            document.getElementById("findings-count-badge").textContent = `${visibleCount} of ${TOTAL_FINDINGS} shown`;
+            const emptyState = document.getElementById("empty-state");
+            if (visibleCount === 0) {
+                emptyState.classList.remove("hidden");
+            } else {
+                emptyState.classList.add("hidden");
+            }
+
+            const resetBtn = document.getElementById("reset-filters-btn");
+            if (currentFilter.severity !== "ALL" || currentFilter.file !== "ALL" || currentFilter.keyword !== "") {
+                resetBtn.classList.remove("hidden");
+            } else {
+                resetBtn.classList.add("hidden");
+            }
+        }
+
+        function setFilter(type, value) {
+            if (type === "severity") {
+                currentFilter.severity = value;
+                document.querySelectorAll("#severity-pills .filter-pill").forEach(btn => {
+                    const sev = btn.getAttribute("data-severity");
+                    if (sev === value) {
+                        btn.className = "filter-pill px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition border bg-[#ACE3FA] text-[#050924] border-[#ACE3FA] cursor-pointer";
+                    } else {
+                        let colorClasses = "bg-[#050924] text-[#C0E8FF] border-[#163C6D]";
+                        if (sev === "CRITICAL") colorClasses = "bg-[#050924] text-red-400 border-red-500/40 hover:bg-red-500/20";
+                        if (sev === "HIGH") colorClasses = "bg-[#050924] text-orange-400 border-orange-500/40 hover:bg-orange-500/20";
+                        if (sev === "MEDIUM") colorClasses = "bg-[#050924] text-amber-300 border-amber-500/40 hover:bg-amber-500/20";
+                        if (sev === "LOW") colorClasses = "bg-[#050924] text-sky-300 border-sky-500/40 hover:bg-sky-500/20";
+                        btn.className = `filter-pill px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition border ${colorClasses} cursor-pointer`;
+                    }
+                });
+            } else if (type === "file") {
+                currentFilter.file = value;
+            } else if (type === "keyword") {
+                currentFilter.keyword = value.trim();
+            }
+            applyFilters();
+        }
+
+        function resetFilters() {
+            currentFilter = { severity: "ALL", file: "ALL", keyword: "" };
+            document.getElementById("file-filter").value = "ALL";
+            document.getElementById("search-input").value = "";
+            setFilter("severity", "ALL");
+        }
+
+        function triggerScan() {
+            const btn = document.getElementById("rescan-btn");
+            const btnText = document.getElementById("rescan-text");
+            const spinner = document.getElementById("rescan-spinner");
+            const progressContainer = document.getElementById("scan-progress-container");
+            const scanBar = document.getElementById("scan-bar");
+            const scanPct = document.getElementById("scan-pct");
+            const scanStage = document.getElementById("scan-stage");
+
+            btn.disabled = true;
+            btn.classList.add("opacity-60", "cursor-not-allowed");
+            spinner.classList.add("animate-spin");
+            btnText.textContent = "Scanning...";
+
+            progressContainer.classList.remove("hidden");
+            scanBar.style.width = "10%";
+            scanPct.textContent = "10%";
+
+            const stages = [
+                { pct: 30, label: "Parsing Python AST & Jinja2 template syntax trees..." },
+                { pct: 65, label: "Tracing untrusted request sources to SQL & DOM sinks..." },
+                { pct: 90, label: "Mapping findings to CWE & OWASP Top 10 (2021)..." },
+                { pct: 100, label: "Scan complete: {{ stats.total }} open vulnerabilities verified." }
+            ];
+
+            let index = 0;
+            const interval = setInterval(() => {
+                if (index < stages.length) {
+                    const s = stages[index];
+                    scanBar.style.width = s.pct + "%";
+                    scanPct.textContent = s.pct + "%";
+                    scanStage.textContent = s.label;
+                    index++;
+                } else {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        progressContainer.classList.add("hidden");
+                        btn.disabled = false;
+                        btn.classList.remove("opacity-60", "cursor-not-allowed");
+                        spinner.classList.remove("animate-spin");
+                        btnText.textContent = "Re-run SAST Scan";
+                        document.getElementById("last-scan-time").textContent = "Just now";
+                    }, 350);
+                }
+            }, 350);
+        }
+    </script>
+</body>
+</html>

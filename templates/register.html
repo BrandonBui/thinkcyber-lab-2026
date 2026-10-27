@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Register - ThinkCyber Store{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-6">
+    <div class="bg-[#0E1F36] border border-[#163C6D] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl shadow-[#001120]/50">
+        <div class="text-center">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="ThinkCyber Foundation" class="h-12 w-auto object-contain mx-auto mb-3">
+            <h1 class="text-2xl font-bold text-white">Create an Account</h1>
+            <p class="text-xs text-[#96CFF1] mt-1">Join the ThinkCyber Store to order security gear</p>
+        </div>
+
+        <form action="{{ url_for('register') }}" method="POST" class="space-y-4">
+            <div>
+                <label for="username" class="block text-xs font-medium text-[#C0E8FF] mb-1">Username *</label>
+                <input type="text" id="username" name="username" required
+                       class="w-full bg-[#031934] border border-[#163C6D] rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ACE3FA]">
+            </div>
+
+            <div>
+                <label for="full_name" class="block text-xs font-medium text-[#C0E8FF] mb-1">Full Name *</label>
+                <input type="text" id="full_name" name="full_name" required placeholder="Alice Smith"
+                       class="w-full bg-[#031934] border border-[#163C6D] rounded-lg px-3.5 py-2 text-xs text-white placeholder-[#5AA3CC]/70 focus:outline-none focus:border-[#ACE3FA]">
+            </div>
+
+            <div>
+                <label for="email" class="block text-xs font-medium text-[#C0E8FF] mb-1">Email Address *</label>
+                <input type="email" id="email" name="email" required placeholder="user@example.com"
+                       class="w-full bg-[#031934] border border-[#163C6D] rounded-lg px-3.5 py-2 text-xs text-white placeholder-[#5AA3CC]/70 focus:outline-none focus:border-[#ACE3FA]">
+            </div>
+
+            <div>
+                <label for="password" class="block text-xs font-medium text-[#C0E8FF] mb-1">Password * (min 8 chars)</label>
+                <input type="password" id="password" name="password" minlength="8" required
+                       class="w-full bg-[#031934] border border-[#163C6D] rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ACE3FA]">
+            </div>
+
+            <div>
+                <label for="confirm_password" class="block text-xs font-medium text-[#C0E8FF] mb-1">Confirm Password *</label>
+                <input type="password" id="confirm_password" name="confirm_password" minlength="8" required
+                       class="w-full bg-[#031934] border border-[#163C6D] rounded-lg px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ACE3FA]">
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-[#ACE3FA] hover:bg-transparent text-[#091650] hover:text-white border border-[#ACE3FA] font-bold uppercase tracking-wider py-2.5 px-4 rounded-full text-xs transition">
+                Register Account
+            </button>
+        </form>
+
+        <div class="text-center text-xs text-[#96CFF1]">
+            Already registered?
+            <a href="{{ url_for('login') }}" class="text-[#ACE3FA] font-semibold hover:underline">
+                Sign in here
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

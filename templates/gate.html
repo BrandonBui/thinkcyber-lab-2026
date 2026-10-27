@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Access Required - ThinkCyber Store</title>
+    <!-- Google Fonts: Roboto & Oswald -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Roboto', 'sans-serif'],
+                        heading: ['Oswald', 'Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#031934] text-[#C0E8FF] min-h-screen flex items-center justify-center p-4 font-sans antialiased">
+    <div class="max-w-md w-full">
+        <!-- Logo Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center mb-4">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="ThinkCyber Foundation" class="h-16 w-auto object-contain">
+            </div>
+            <p class="text-xs text-[#ACE3FA] uppercase tracking-[0.25em] mt-2 font-semibold">
+                Lab &amp; Training Exercise
+            </p>
+        </div>
+
+        <!-- Card Container -->
+        <div class="bg-[#0E1F36] border border-[#163C6D] rounded-2xl p-6 sm:p-8 shadow-2xl shadow-[#001120]/70 relative overflow-hidden">
+            <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#5AA3CC] via-[#ACE3FA] to-[#5AA3CC]"></div>
+
+            <div class="mb-6 text-center">
+                <h2 class="text-lg font-bold text-white uppercase tracking-wide mb-2">Event Access Verification</h2>
+                <p class="text-xs text-[#96CFF1] leading-relaxed">
+                    This training environment is private. Please enter the event access code provided by your instructor or facilitator.
+                </p>
+            </div>
+
+            <!-- Flash Alerts -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-6 space-y-2">
+                {% for category, message in messages %}
+                    {% set alert_classes = "bg-red-950/80 text-red-200 border-red-800/80" if category == "error" else "bg-[#0F3059]/90 text-[#ACE3FA] border-[#5AA3CC]/60" %}
+                    <div class="p-3 text-xs rounded-xl border {{ alert_classes }} flex items-center">
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+                </div>
+            {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('gate', next=request.args.get('next')) }}" method="POST" class="space-y-5">
+                <div>
+                    <label for="access_code" class="block text-xs font-medium text-[#C0E8FF] mb-1.5">
+                        Event Access Code
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="access_code" name="access_code" required autofocus
+                               placeholder="Enter passphrase..."
+                               class="w-full bg-[#031934] border border-[#163C6D] rounded-xl px-4 py-3 text-sm text-white placeholder-[#5AA3CC]/60 focus:outline-none focus:border-[#ACE3FA] focus:ring-1 focus:ring-[#ACE3FA] tracking-wider">
+                    </div>
+                    <p class="text-[11px] text-[#96CFF1]/70 mt-2">
+                        Your session will remain active for 24 hours on this device.
+                    </p>
+                </div>
+
+                <button type="submit"
+                        class="w-full bg-[#ACE3FA] hover:bg-transparent text-[#091650] hover:text-white border border-[#ACE3FA] font-bold uppercase tracking-wider py-3 px-4 rounded-full text-sm transition flex items-center justify-center space-x-2 shadow-lg shadow-[#001120]/50">
+                    <span>Unlock Environment</span>
+                    <span>→</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Footer Notice -->
+        <div class="text-center mt-6 text-xs text-[#96CFF1]/60">
+            ThinkCyber Foundation • Authorized participant access only.
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# Git and version control
+.git/
+.gitignore
+
+# Local Python virtual environments and caches
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Local SQLite database (built fresh inside the container via `python -m src.db`)
+*.db
+*.db-journal
+*.db-wal
+
+# OS and editor files
+.DS_Store
+.vscode/
+.idea/
+
+# Local Docker Compose and test files not needed in production build
+docker-compose.yml
+tests/
+README.md
